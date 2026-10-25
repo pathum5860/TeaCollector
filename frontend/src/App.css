@@ -921,6 +921,16 @@ td details p {
 .filter-bar .export {
   margin-left: auto;
 }
+.lorry-filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 15px;
+  padding: 22px 24px;
+  border-bottom: 1px solid var(--line);
+}
+.lorry-filters .field {
+  margin: 0;
+}
 .empty {
   text-align: center;
   padding: 55px 25px;
@@ -1691,6 +1701,7 @@ td details { font-size: 11px; }
   .form-actions .button { flex: 1 1 150px; }
   .panel-heading > .button { width: auto; }
   .notification-panel { right: -10px; }
+  .lorry-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 18px 20px; }
 }
 
 @media (max-width: 550px) {
@@ -1704,6 +1715,7 @@ td details { font-size: 11px; }
   .filter-bar { align-items: stretch; }
   .filter-bar .field { min-width: 100%; }
   .filter-bar .export { width: 100%; text-align: left; }
+  .lorry-filters { grid-template-columns: 1fr; padding: 16px; }
   .form-actions { flex-direction: column-reverse; }
   .form-actions .button { width: 100%; flex-basis: auto; }
   .modal-backdrop { align-items: flex-start; overflow-y: auto; }

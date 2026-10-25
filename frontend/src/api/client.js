@@ -5,14 +5,19 @@ export const session = {
   clear: () => sessionStorage.removeItem(TOKEN_KEY),
 };
 export async function api(path, method = "GET", body) {
-  const response = await fetch(`/api${path}`, {
-    method,
-    headers: {
-      "Content-Type": "application/json",
-      ...(session.get() ? { Authorization: `Bearer ${session.get()}` } : {}),
-    },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
+  let response;
+  try {
+    response = await fetch(`/api${path}`, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        ...(session.get() ? { Authorization: `Bearer ${session.get()}` } : {}),
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+  } catch {
+    throw new Error("The operation failed because the server could not be reached. Check your connection and try again.");
+  }
   const data = await response
     .json()
     .catch(() => ({ error: "The server returned an unexpected response." }));

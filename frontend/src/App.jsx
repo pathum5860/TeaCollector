@@ -16,7 +16,7 @@ const navByRole = {
   company: [
     ["overview", "grid", "Overview"],
     ["collections", "list", "Collections"],
-    ["lorries", "truck", "Lorries"],
+    ["lorries", "truck", "Lorry Management"],
     ["collectors", "user", "Collectors"],
     ["bills", "bill", "Bills & payments"],
     ["monthly", "bill", "Monthly payments"],
@@ -35,11 +35,37 @@ const descriptions = {
   collections: "Keep track of every pickup and its collection status.",
   bills: "Weight, rates and payments, all in one place.",
   monthly: "Review monthly payments and every collection included in them.",
-  lorries: "Manage your fleet and the areas each lorry serves.",
+  lorries: "Create, view, edit and delete your company's lorries.",
   collectors: "Create login accounts for your company’s collectors.",
   company: "Manage your company profile and the rate for new requests.",
   profile: "Keep your contact and pickup details up to date.",
 };
+const lorrySortFields = {
+  vehicle: "vehicleNumber",
+  label: "label",
+  capacity: "capacityGrams",
+  status: "active",
+  created: "createdAt",
+};
+function filterAndSortLorries(lorries, query, bookingStatus, area, sortBy) {
+  const needle = query.trim().toLowerCase();
+  return lorries
+    .filter((lorry) => {
+      const searchable = [lorry.vehicleNumber, lorry.label, lorry.driverName, ...lorry.areas];
+      const matchesSearch = !needle || searchable.some((value) => value.toLowerCase().includes(needle));
+      const matchesStatus = bookingStatus === "all" || (bookingStatus === "active" ? lorry.active : !lorry.active);
+      const matchesArea = area === "all" || lorry.areas.includes(area);
+      return matchesSearch && matchesStatus && matchesArea;
+    })
+    .sort((a, b) => {
+      const field = lorrySortFields[sortBy];
+      const left = a[field];
+      const right = b[field];
+      return typeof left === "number"
+        ? left - right
+        : String(left).localeCompare(String(right), undefined, { numeric: true });
+    });
+}
 
 export default function App() {
   const [config, setConfig] = useState(null);
@@ -55,6 +81,10 @@ export default function App() {
   const [status, setStatus] = useState("all");
   const [date, setDate] = useState("");
   const [customer, setCustomer] = useState("all");
+  const [lorryQuery, setLorryQuery] = useState("");
+  const [lorryStatus, setLorryStatus] = useState("all");
+  const [lorryArea, setLorryArea] = useState("all");
+  const [lorrySort, setLorrySort] = useState("vehicle");
   async function refresh() {
     const token = session.get();
     if (!token) {
@@ -112,6 +142,14 @@ export default function App() {
     setCustomer("all");
     setQuery("");
   }
+  const lorryAreas = [...new Set((data?.lorries || []).flatMap((lorry) => lorry.areas))].sort();
+  const visibleLorries = filterAndSortLorries(
+    data?.lorries || [],
+    lorryQuery,
+    lorryStatus,
+    lorryArea,
+    lorrySort,
+  );
   function openMonthlySettlement(settlement) {
     setSelectedSettlement(settlement);
     setView("monthlyDetail");
@@ -1103,11 +1141,19 @@ export default function App() {
 
           {view === "lorries" && (
             <section className="panel">
+              <div className="filters lorry-filters" aria-label="Lorry search and filters">
+                <label className="field"><span>Search lorries</span><input value={lorryQuery} onChange={(e) => setLorryQuery(e.target.value)} placeholder="Vehicle, label or collector" /></label>
+                <label className="field"><span>Booking status</span><select value={lorryStatus} onChange={(e) => setLorryStatus(e.target.value)}><option value="all">All statuses</option><option value="active">Open</option><option value="paused">Paused</option></select></label>
+                <label className="field"><span>Collection area</span><select value={lorryArea} onChange={(e) => setLorryArea(e.target.value)}><option value="all">All areas</option>{lorryAreas.map((area) => <option key={area} value={area}>{area}</option>)}</select></label>
+                <label className="field"><span>Sort by</span><select value={lorrySort} onChange={(e) => setLorrySort(e.target.value)}><option value="vehicle">Vehicle number</option><option value="label">Lorry label</option><option value="capacity">Capacity</option><option value="status">Booking status</option><option value="created">Date added</option></select></label>
+              </div>
               {!data.lorries.length ? (
                 <Empty title="Add your first lorry">
                   Create a collector account, then add the lorry and its
                   collection areas.
                 </Empty>
+              ) : !visibleLorries.length ? (
+                <Empty title="No lorries match these filters">Try a different search, status, or collection area.</Empty>
               ) : (
                 <div className="table-scroll">
                   <table>
@@ -1122,7 +1168,7 @@ export default function App() {
                       </tr>
                     </thead>
                     <tbody>
-                      {data.lorries.map((l) => (
+                      {visibleLorries.map((l) => (
                         <tr key={l.id}>
                           <td>
                             <strong>{l.vehicleNumber}</strong>
@@ -1140,6 +1186,19 @@ export default function App() {
                           </td>
                           <td>
                             <div className="row-actions">
+                              <button
+                                className="button secondary small"
+                                onClick={async () => {
+                                  try {
+                                    const record = await api(`/lorries/${l.id}`);
+                                    setModal({ type: "lorryDetails", record });
+                                  } catch (err) {
+                                    setError(err.message);
+                                  }
+                                }}
+                              >
+                                View
+                              </button>
                               <button
                                 className="button secondary small"
                                 onClick={() =>

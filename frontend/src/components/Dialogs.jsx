@@ -1,5 +1,23 @@
 import { money, kg } from "../api/client.js";
 import { Modal, Form, Field, Badge, Brand } from "./ui.jsx";
+
+function validateLorry(values) {
+  const required = [
+    ["label", "Enter a lorry label."],
+    ["vehicleNumber", "Enter a vehicle number."],
+    ["driverId", "Choose a collector."],
+    ["capacity", "Enter the daily capacity."],
+    ["areas", "Enter at least one collection area."],
+  ];
+  const missing = required.find(([key]) => !String(values[key] ?? "").trim());
+  if (missing) throw new Error(missing[1]);
+  if (!/^\d+(?:\.\d{1,3})?$/.test(String(values.capacity).trim()) || Number(values.capacity) <= 0)
+    throw new Error("Capacity must be a positive number with up to 3 decimal places.");
+  if (String(values.vehicleNumber).trim().length > 30) throw new Error("Vehicle number must contain 1–30 characters.");
+  if (String(values.areas).split(",").map((area) => area.trim()).filter(Boolean).length > 10)
+    throw new Error("Enter no more than 10 collection areas.");
+  if (typeof values.active !== "boolean") throw new Error("Choose whether this lorry accepts new bookings.");
+}
 export default function Dialogs({ modal, close, data, save }) {
   if (!modal) return null;
   const r = modal.record;
@@ -310,6 +328,23 @@ export default function Dialogs({ modal, close, data, save }) {
       </Modal>
     );
   }
+  if (modal.type === "lorryDetails")
+    return (
+      <Modal title="Lorry details" close={close}>
+        <dl>
+          <dt>Vehicle number</dt><dd>{r.vehicleNumber}</dd>
+          <dt>Lorry label</dt><dd>{r.label}</dd>
+          <dt>Collector</dt><dd>{r.driverName}</dd>
+          <dt>Daily capacity</dt><dd>{kg(r.capacityGrams)} kg</dd>
+          <dt>Collection areas</dt><dd>{r.areas.join(", ")}</dd>
+          <dt>Bookings</dt><dd>{r.active ? "Open" : "Paused"}</dd>
+          <dt>Registered</dt><dd>{new Date(r.createdAt).toLocaleDateString("en-GB")}</dd>
+        </dl>
+        <div className="form-actions">
+          <button className="button secondary" onClick={close}>Close</button>
+        </div>
+      </Modal>
+    );
   if (modal.type === "lorry")
     return (
       <Modal title={r ? "Edit lorry" : "Add a lorry"} close={close}>
@@ -324,14 +359,15 @@ export default function Dialogs({ modal, close, data, save }) {
           }}
           onCancel={close}
           submit={r ? "Save lorry" : "Add lorry"}
-          onSubmit={(v) =>
-            save(
+          onSubmit={(v) => {
+            validateLorry(v);
+            return save(
               r ? `/lorries/${r.id}` : "/lorries",
               r ? "PATCH" : "POST",
               v,
               "Lorry saved.",
-            )
-          }
+            );
+          }}
         >
           {(bind, v, set) => (
             <>

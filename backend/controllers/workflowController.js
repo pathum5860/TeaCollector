@@ -267,6 +267,26 @@ export function routes(store, secret) {
       active: b.active,
     };
   }
+  api.get("/lorries", role("company"), async (req, res) => {
+    let lorries = await store.list("lorries", { companyId: req.user.companyId });
+    const query = typeof req.query.q === "string" ? req.query.q.trim().toLowerCase() : "";
+    const status = typeof req.query.status === "string" ? req.query.status : "all";
+    const area = typeof req.query.area === "string" ? req.query.area.trim().toLowerCase() : "";
+    if (!["all", "active", "paused"].includes(status)) fail("Invalid lorry status filter.");
+    if (query) lorries = lorries.filter((lorry) => [lorry.vehicleNumber, lorry.label, ...(lorry.areas || [])].some((value) => String(value).toLowerCase().includes(query)));
+    if (status !== "all") lorries = lorries.filter((lorry) => lorry.active === (status === "active"));
+    if (area) lorries = lorries.filter((lorry) => lorry.areas.some((value) => value.toLowerCase() === area));
+    const sort = { vehicle: "vehicleNumber", label: "label", capacity: "capacityGrams", status: "active", created: "createdAt" }[req.query.sort] || "vehicleNumber";
+    lorries.sort((a, b) => String(a[sort]).localeCompare(String(b[sort]), undefined, { numeric: true }));
+    res.json(await Promise.all(lorries.map(async (lorry) => ({ ...lorry, driverName: (await store.one("users", { id: lorry.driverId }))?.name || "Unavailable" }))));
+  });
+  api.get("/lorries/:id", role("company"), async (req, res) => {
+    const lorry = requireCompany(
+      await store.one("lorries", { id: req.params.id }), req.user,
+    );
+    const driver = await store.one("users", { id: lorry.driverId });
+    res.json({ ...lorry, driverName: driver?.name || "Unavailable" });
+  });
   api.post("/lorries", role("company"), async (req, res) => {
     const data = await lorryInput(req.body, req.user);
     res
@@ -293,6 +313,7 @@ export function routes(store, secret) {
     if ((await store.list("requests", { lorryId: req.params.id })).length)
       fail(
         "This lorry has collection history. Edit it and turn off new bookings instead.",
+        409,
       );
     await store.remove("lorries", req.params.id);
     res.json({ ok: true });
