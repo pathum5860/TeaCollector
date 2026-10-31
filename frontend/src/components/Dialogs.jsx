@@ -375,7 +375,7 @@ export default function Dialogs({ modal, close, data, save }) {
                 label="Lorry label"
                 {...bind("label")}
                 required
-                placeholder="Akuressa daily collection"
+                placeholder="Daily collection lorry"
                 maxLength={100}
               />
               <div className="form-grid">
