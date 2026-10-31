@@ -12,6 +12,10 @@ See the [database design and ERD](./docs/database-design.md) for the collections
 
 The API runs at `http://localhost:5000` and uses the workflow API only.
 
+## Seed demonstration data
+
+After configuring `backend/.env`, run `npm run seed` from `backend` (or `npm run seed:demo`). The idempotent seed creates or reuses the Wijaya Tea demo company, Tea Sellers, collectors, lorries, requests, notifications, and a settlement. It only inserts missing records and never deletes, resets, changes passwords, or modifies existing records.
+
 ## Run the frontend
 
 1. In `frontend`, run `npm install`.
