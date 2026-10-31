@@ -1,39 +1,24 @@
-# 🍃 TeaCollector
+# TeaCollector
 
-> A calm, connected way to move tea from estate pickup to payment.
+TeaCollector is a web application for managing tea collections from estate pickup to payment.
 
-TeaCollector is a full-stack tea collection workflow for **Tea Sellers**, **collection companies**, and **field collectors**. It brings lorry booking, pickup progress, weighing, billing, payments, and monthly settlements into one focused workspace.
+## Features
 
-## ✨ What it does
+- Tea Sellers can request lorry pickups and track collections.
+- Collection companies can manage lorries, collectors, rates, bills, and payments.
+- Collectors can view assigned pickups and record collected tea weight.
+- Role-based access, notifications, monthly settlements, and CSV export.
 
-- **Tea Sellers** find available lorries, request collections, follow pickup progress, view bills, and track monthly payments.
-- **Collection companies** manage collection areas and rates, create collector accounts, operate their lorry fleet, process bills, and settle monthly payments.
-- **Collectors** see assigned pickups, update collection status, record actual tea weight, and complete field work from one dashboard.
-- **Everyone** gets role-based access, notifications, Sri Lankan currency formatting, responsive layouts, and CSV export for collection records.
+## Technology
 
-## 🧭 The workflow
+- Frontend: React and Vite
+- Backend: Node.js and Express
+- Database: MongoDB with Mongoose
+- Authentication: Bearer tokens and password hashing
 
-```text
-Tea Seller → chooses lorry → requests pickup → Collector completes collection
-                                                   ↓
-                                         Company records weight
-                                                   ↓
-                                      Bill → payment → settlement
-```
+## Setup
 
-## 🛠️ Built with
-
-| Layer | Technology |
-| --- | --- |
-| Frontend | React 19, Vite 8, CSS |
-| Backend | Node.js, Express 5 |
-| Database | MongoDB with Mongoose 9 |
-| Authentication | JWT-style bearer sessions with scrypt password hashing |
-| Testing | Node's built-in test runner and an in-memory workflow store |
-
-## 🚀 Run locally
-
-### 1. Start the backend
+### Backend
 
 ```bash
 cd backend
@@ -41,25 +26,23 @@ npm install
 copy .env.example .env
 ```
 
-Open `backend/.env` and set a MongoDB connection string and a secure JWT secret:
+Edit `backend/.env`:
 
 ```env
-MONGO_URI=mongodb+srv://<username>:<password>@<cluster>/<database>?retryWrites=true&w=majority
-JWT_SECRET=replace-with-a-random-secret-at-least-32-characters-long
+MONGO_URI=mongodb+srv://<username>:<password>@<cluster>/<database>
+JWT_SECRET=use-a-long-random-secret
 PORT=5000
 ```
 
-Start the API:
+Start the backend:
 
 ```bash
 npm run dev
 ```
 
-The backend runs at `http://localhost:5000`.
+### Frontend
 
-### 2. Start the frontend
-
-Open a second terminal:
+Open another terminal:
 
 ```bash
 cd frontend
@@ -67,51 +50,32 @@ npm install
 npm run dev
 ```
 
-Open the Vite URL shown in the terminal, usually `http://localhost:5173`. The frontend automatically proxies `/api` requests to the backend.
+Open the Vite URL shown in the terminal, usually `http://localhost:5173`.
 
-## 🧪 Test and build
-
-Run backend tests:
+## Tests and build
 
 ```bash
 cd backend
 npm test
-```
 
-Build and lint the frontend:
-
-```bash
-cd frontend
+cd ../frontend
 npm run lint
 npm run build
 ```
 
-The backend tests cover authentication, authorization, billing precision, lorry CRUD, duplicate vehicle numbers, persistence, and history-protected deletion.
-
-## 📁 Project map
+## Project structure
 
 ```text
-TeaCollector/
-├── backend/
-│   ├── controllers/     API workflow and authorization logic
-│   ├── models/          Mongoose schemas and workflow store
-│   ├── tests/            Backend regression tests
-│   └── server.js        Express entry point
-├── frontend/
-│   └── src/
-│       ├── api/         API client, sessions, formatting, CSV export
-│       ├── components/  Shared layout, forms, dialogs, and UI
-│       └── pages/       Role-based workspaces
-└── README.md
+backend/     Express API, MongoDB models, authentication, and tests
+frontend/    React interface and role-based workspaces
 ```
 
-## 🔐 Security notes
+## Security
 
-- Keep `backend/.env` private and never commit it.
-- Use a long, random `JWT_SECRET` outside local development.
-- Passwords are stored as scrypt hashes, never as plain text.
-- API access is role-aware: sellers, companies, and collectors only receive the workflows relevant to them.
+- Never commit `backend/.env`.
+- Use a strong `JWT_SECRET` in production.
+- Do not use development passwords in production.
 
-## 📜 License
+## License
 
-This project is currently distributed without a public license. Add a license before publishing it for external reuse.
+No public license has been added yet.
